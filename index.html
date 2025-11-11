@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>视频播放器</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+      color: white;
+      font-family: sans-serif;
+    }
+    .player {
+      width: 100%;
+      max-width: 1000px;
+    }
+    video {
+      width: 100%;
+      border-radius: 8px;
+      background: #000;
+    }
+    .error {
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="player">
+    <video id="videoPlayer" controls autoplay playsinline preload="metadata">
+      您的浏览器不支持视频播放。
+    </video>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const encodedVideoUrl = urlParams.get('v');
+
+    const player = document.getElementById('videoPlayer');
+
+    if (!encodedVideoUrl) {
+      document.querySelector('.player').innerHTML = 
+        '<div class="error">❌ 未提供视频链接<br>请在 URL 中添加 ?v=视频地址</div>';
+    } else {
+      // 尝试解码（防止链接被二次编码）
+      let videoUrl;
+      try {
+        // 先 decodeURIComponent，因为钉钉或浏览器可能自动编码
+        videoUrl = decodeURIComponent(encodedVideoUrl);
+      } catch (e) {
+        // 如果失败，直接使用原始值
+        videoUrl = encodedVideoUrl;
+      }
+
+      // 简单校验是否为视频链接
+      if (videoUrl && (videoUrl.endsWith('.mp4') || videoUrl.includes('.mp4?'))) {
+        player.src = videoUrl;
+        player.load();
+      } else {
+        document.querySelector('.player').innerHTML = 
+          '<div class="error">⚠️ 不支持的视频格式<br>仅支持 .mp4 链接</div>';
+      }
+    }
+  </script>
+</body>
+</html>
