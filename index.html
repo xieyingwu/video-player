@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>视频播放器</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #000;
       display: flex;
@@ -14,57 +18,78 @@
       min-height: 100vh;
       padding: 10px;
       color: white;
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-    .player {
+    .player-container {
       width: 100%;
-      max-width: 1000px;
+      max-width: 1200px; /* 可根据需要调整 */
+      aspect-ratio: 16 / 9; /* 强制 16:9 比例（适合大多数视频） */
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
     video {
       width: 100%;
-      border-radius: 8px;
+      height: 100%;
+      object-fit: contain; /* 保持比例，不裁剪 */
       background: #000;
+      outline: none;
     }
     .error {
       text-align: center;
-      padding: 20px;
+      padding: 30px 20px;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+    @media (max-width: 768px) {
+      .player-container {
+        aspect-ratio: 9 / 16; /* 手机竖屏时更合适？可选 */
+        /* 如果你的视频是横屏，建议保留 16/9 */
+      }
     }
   </style>
 </head>
 <body>
-  <div class="player">
-    <video id="videoPlayer" controls autoplay playsinline preload="metadata">
-      您的浏览器不支持视频播放。
-    </video>
-  </div>
+  <div id="content"></div>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const encodedVideoUrl = urlParams.get('v');
 
-    const player = document.getElementById('videoPlayer');
+    const content = document.getElementById('content');
 
     if (!encodedVideoUrl) {
-      document.querySelector('.player').innerHTML = 
-        '<div class="error">❌ 未提供视频链接<br>请在 URL 中添加 ?v=视频地址</div>';
+      content.innerHTML = `
+        <div class="error">
+          ❌ 未提供视频链接<br>
+          请在 URL 中添加 ?v=视频地址
+        </div>
+      `;
     } else {
-      // 尝试解码（防止链接被二次编码）
       let videoUrl;
       try {
-        // 先 decodeURIComponent，因为钉钉或浏览器可能自动编码
         videoUrl = decodeURIComponent(encodedVideoUrl);
       } catch (e) {
-        // 如果失败，直接使用原始值
         videoUrl = encodedVideoUrl;
       }
 
-      // 简单校验是否为视频链接
-      if (videoUrl && (videoUrl.endsWith('.mp4') || videoUrl.includes('.mp4?'))) {
-        player.src = videoUrl;
-        player.load();
+      // 简单校验是否为视频（支持 .mp4 或带 query 的 mp4）
+      if (videoUrl && (videoUrl.endsWith('.mp4') || /\.mp4(\?|$)/.test(videoUrl))) {
+        content.innerHTML = `
+          <div class="player-container">
+            <video controls autoplay playsinline preload="metadata" src="${videoUrl}">
+              您的浏览器不支持视频播放。
+            </video>
+          </div>
+        `;
       } else {
-        document.querySelector('.player').innerHTML = 
-          '<div class="error">⚠️ 不支持的视频格式<br>仅支持 .mp4 链接</div>';
+        content.innerHTML = `
+          <div class="error">
+            ⚠️ 不支持的视频格式<br>
+            仅支持 .mp4 链接
+          </div>
+        `;
       }
     }
   </script>
