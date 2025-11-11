@@ -5,36 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>视频播放器</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
     body {
       background: #000;
+      min-height: 100vh;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      padding: 10px;
-      color: white;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    #content {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     .player-container {
-      width: 100%;
-      max-width: 1200px; /* 可根据需要调整 */
-      aspect-ratio: 16 / 9; /* 强制 16:9 比例（适合大多数视频） */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      height: 100vh;
       position: relative;
+      background: #000;
+      /* 移除aspect-ratio，视频实际宽高用JS控制 */
       overflow: hidden;
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
     video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain; /* 保持比例，不裁剪 */
       background: #000;
       outline: none;
+      max-width: 100vw;
+      max-height: 100vh;
+      margin: auto;
+      display: block;
+      object-fit: contain; /* 保持比例，不裁剪内容 */
+      /* 宽高由JS根据实际比例控制 */
     }
     .error {
       text-align: center;
@@ -42,21 +52,13 @@
       max-width: 600px;
       line-height: 1.6;
     }
-    @media (max-width: 768px) {
-      .player-container {
-        aspect-ratio: 9 / 16; /* 手机竖屏时更合适？可选 */
-        /* 如果你的视频是横屏，建议保留 16/9 */
-      }
-    }
   </style>
 </head>
 <body>
   <div id="content"></div>
-
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const encodedVideoUrl = urlParams.get('v');
-
     const content = document.getElementById('content');
 
     if (!encodedVideoUrl) {
@@ -74,15 +76,48 @@
         videoUrl = encodedVideoUrl;
       }
 
-      // 简单校验是否为视频（支持 .mp4 或带 query 的 mp4）
       if (videoUrl && (videoUrl.endsWith('.mp4') || /\.mp4(\?|$)/.test(videoUrl))) {
+        // 创建播放器容器和video标签
         content.innerHTML = `
           <div class="player-container">
-            <video controls autoplay playsinline preload="metadata" src="${videoUrl}">
+            <video id="video" controls autoplay playsinline preload="metadata" src="${videoUrl}">
               您的浏览器不支持视频播放。
             </video>
           </div>
         `;
+        // 动态适配横竖屏
+        const videoEl = document.getElementById('video');
+        videoEl.addEventListener('loadedmetadata', function() {
+          const vw = window.innerWidth, vh = window.innerHeight;
+          const vW = videoEl.videoWidth, vH = videoEl.videoHeight;
+          if (vH === 0 || vW === 0) return; // 视频元数据异常
+          // 竖屏视频（高大于宽）
+          if (vH > vW) {
+            videoEl.style.height = vh + 'px';
+            videoEl.style.width =  (vh * vW / vH) + 'px';
+          } else { // 横屏视频
+            videoEl.style.width = vw + 'px';
+            videoEl.style.height = (vw * vH / vW) + 'px';
+          }
+          // 保证视频居中
+          videoEl.style.margin = 'auto';
+        });
+        // 屏幕旋转、窗口大小变化时重新适配
+        window.addEventListener('resize', function() {
+          const videoEl = document.getElementById('video');
+          if (videoEl && videoEl.videoWidth && videoEl.videoHeight) {
+            const vw = window.innerWidth, vh = window.innerHeight;
+            const vW = videoEl.videoWidth, vH = videoEl.videoHeight;
+            if (vH > vW) {
+              videoEl.style.height = vh + 'px';
+              videoEl.style.width =  (vh * vW / vH) + 'px';
+            } else {
+              videoEl.style.width = vw + 'px';
+              videoEl.style.height = (vw * vH / vW) + 'px';
+            }
+            videoEl.style.margin = 'auto';
+          }
+        });
       } else {
         content.innerHTML = `
           <div class="error">
