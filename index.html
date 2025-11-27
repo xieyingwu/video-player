@@ -76,7 +76,7 @@
         videoUrl = encodedVideoUrl;
       }
 
-      if (videoUrl) {
+      if (videoUrl && (videoUrl.endWith('.mp4')|| videoUrl.endWith('.MP4') {
         // 创建播放器容器和video标签
         content.innerHTML = `
           <div class="player-container">
